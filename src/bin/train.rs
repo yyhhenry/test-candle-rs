@@ -74,7 +74,7 @@ fn main() -> Result<()> {
             let output = model.forward_t(&images, true)?;
             let loss = cross_entropy(&output, &labels)?;
             opt.backward_step(&loss)?;
-            loss_sum += loss.to_scalar::<f32>()?;
+            loss_sum += loss.to_scalar::<f32>()? * (end - start) as f32;
         }
         let avg_loss = loss_sum / train_size as f32;
         println!(
