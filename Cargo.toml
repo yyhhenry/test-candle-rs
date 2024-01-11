@@ -7,7 +7,7 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-candle-core = {version = "0.3.2", features = ["cuda"]}
+candle-core = {version = "0.3.2", features = ["cudnn"]}
 candle-datasets = "0.3.2"
 candle-nn = {version = "0.3.2", features = ["cuda"]}
 clap = {version = "4.4.14", features = ["derive"]}
