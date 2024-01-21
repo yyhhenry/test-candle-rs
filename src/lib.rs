@@ -18,6 +18,7 @@ pub trait MNISTModel: ModuleT {
 pub struct CNNModel {
     conv1: nn::Conv2d,
     conv2: nn::Conv2d,
+    dropout: nn::Dropout,
     fc1: nn::Linear,
     fc2: nn::Linear,
 }
@@ -27,11 +28,13 @@ impl CNNModel {
         //  max_pool2d(2): b, 32, 26, 26 -> b, 32, 13, 13
         let conv2 = nn::conv2d(32, 64, 3, nn::Conv2dConfig::default(), vb.pp("conv2"))?;
         //  max_pool2d(2): b, 64, 11, 11 -> b, 64, 5, 5
+        let dropout = nn::ops::Dropout::new(0.25);
         let fc1 = nn::linear(64 * 5 * 5, 128, vb.pp("fc1"))?;
         let fc2 = nn::linear(128, 10, vb.pp("fc2"))?;
         Ok(Self {
             conv1,
             conv2,
+            dropout,
             fc1,
             fc2,
         })
@@ -46,6 +49,7 @@ impl nn::ModuleT for CNNModel {
             .apply_t(&self.conv2, train)?
             .max_pool2d(2)?
             .reshape(((), 64 * 5 * 5))?
+            .apply_t(&self.dropout, train)?
             .apply(&self.fc1)?
             .relu()?
             .apply(&self.fc2)?;
