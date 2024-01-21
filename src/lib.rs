@@ -10,8 +10,8 @@ pub trait MNISTModel: ModuleT {
     }
     fn predict_one_argmax(&self, x: &Tensor) -> Result<(Vec<f32>, usize)> {
         let xs = x.reshape((1, ()))?;
-        let output = self.predict_softmax(&xs)?;
-        let argmax = output.argmax(1)?.to_dtype(DType::I64)?.to_scalar::<i64>()?;
+        let output = self.predict_softmax(&xs)?.reshape(10)?;
+        let argmax = output.argmax(0)?.to_dtype(DType::I64)?.to_scalar::<i64>()?;
         Ok((output.to_vec1()?, argmax as usize))
     }
 }
@@ -53,7 +53,6 @@ pub struct CNNModel {
     conv1: ConvBlock,
     conv2: ConvBlock,
     fc1: nn::Linear,
-    dropout: nn::Dropout,
     fc2: nn::Linear,
 }
 impl CNNModel {
@@ -61,13 +60,11 @@ impl CNNModel {
         let conv1 = ConvBlock::new(1, 8, 3, vb.pp("conv1"))?;
         let conv2 = ConvBlock::new(8, 16, 3, vb.pp("conv2"))?;
         let fc1 = nn::linear(16 * 24 * 24, 128, vb.pp("fc1"))?;
-        let dropout = nn::Dropout::new(0.5);
         let fc2 = nn::linear(128, 10, vb.pp("fc2"))?;
         Ok(Self {
             conv1,
             conv2,
             fc1,
-            dropout,
             fc2,
         })
     }
@@ -81,7 +78,6 @@ impl nn::ModuleT for CNNModel {
             .reshape(((), 16 * 24 * 24))?
             .apply(&self.fc1)?
             .relu()?
-            .apply_t(&self.dropout, train)?
             .apply(&self.fc2)?;
         Ok(xs)
     }
