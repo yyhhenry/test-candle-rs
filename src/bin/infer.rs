@@ -11,8 +11,6 @@ struct Args {
     verbose: bool,
     #[arg(short, long)]
     model_path: Option<String>,
-    #[arg(short = 'i', long)]
-    single_image: bool,
     #[arg(long)]
     linear: bool,
 }
@@ -51,14 +49,10 @@ fn infer_imgs(
     model: &dyn MNISTModel,
     img_path: impl AsRef<Path>,
     verbose: bool,
-    single_image: bool,
     device: &Device,
 ) -> Result<()> {
     let img_path = img_path.as_ref();
-    if single_image {
-        if img_path.is_dir() {
-            bail!("Please specify a single image file");
-        }
+    if img_path.is_file() {
         return infer_single_image(model, img_path, verbose, device);
     }
     let imgs = std::path::Path::new(img_path).read_dir()?;
@@ -85,11 +79,5 @@ fn main() -> Result<()> {
         if args.linear { "linear" } else { "cnn" }
     ));
     vm.load(&model_path)?;
-    infer_imgs(
-        model.as_ref(),
-        &args.image_path,
-        args.verbose,
-        args.single_image,
-        &device,
-    )
+    infer_imgs(model.as_ref(), &args.image_path, args.verbose, &device)
 }
