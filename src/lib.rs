@@ -33,14 +33,7 @@ impl ConvBlock {
             nn::Conv2dConfig::default(),
             vb.pp("conv"),
         )?;
-        let bn = nn::batch_norm(
-            out_channels,
-            nn::BatchNormConfig {
-                affine: false,
-                ..Default::default()
-            },
-            vb.pp("bn"),
-        )?;
+        let bn = nn::batch_norm(out_channels, nn::BatchNormConfig::default(), vb.pp("bn"))?;
         Ok(Self { conv, bn })
     }
 }
