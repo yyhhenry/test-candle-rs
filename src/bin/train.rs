@@ -11,8 +11,8 @@ struct Args {
     batch_size: Option<usize>,
     #[arg(long)]
     epochs: Option<usize>,
-    #[arg(long, default_value = "0.001")]
-    lr: f64,
+    #[arg(long)]
+    lr: Option<f64>,
     #[arg(short, long)]
     model_path: Option<String>,
     #[arg(long)]
@@ -77,12 +77,13 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let batch_size = args
         .batch_size
-        .unwrap_or(if args.linear { 3000 } else { 600 });
+        .unwrap_or(if args.linear { 3000 } else { 200 });
     let model_path = args.model_path.unwrap_or(format!(
         "./model/{}_model.safetensors",
         if args.linear { "linear" } else { "cnn" }
     ));
-    let epochs = args.epochs.unwrap_or(if args.linear { 50 } else { 10 });
+    let lr = args.lr.unwrap_or(if args.linear { 1e-2 } else { 2e-4 });
+    let epochs = args.epochs.unwrap_or(if args.linear { 50 } else { 20 });
     let device = Device::cuda_if_available(0)?;
     device.set_seed(42)?;
 
@@ -102,8 +103,7 @@ fn main() -> Result<()> {
     let mut opt = AdamW::new(
         vm.all_vars(),
         ParamsAdamW {
-            lr: args.lr,
-            weight_decay: 0.,
+            lr,
             ..Default::default()
         },
     )?;
