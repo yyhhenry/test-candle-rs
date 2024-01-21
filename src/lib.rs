@@ -1,4 +1,4 @@
-use candle_core::{DType, ModuleT, Result, Tensor};
+use candle_core::{ModuleT, Result, Tensor};
 use candle_nn as nn;
 pub trait MNISTModel: ModuleT {
     fn predict_softmax(&self, xs: &Tensor) -> Result<Tensor> {
@@ -11,7 +11,7 @@ pub trait MNISTModel: ModuleT {
     fn predict_one_argmax(&self, x: &Tensor) -> Result<(Vec<f32>, usize)> {
         let xs = x.reshape((1, ()))?;
         let output = self.predict_softmax(&xs)?.reshape(10)?;
-        let argmax = output.argmax(0)?.to_dtype(DType::I64)?.to_scalar::<i64>()?;
+        let argmax = output.argmax(0)?.to_scalar::<u32>()?;
         Ok((output.to_vec1()?, argmax as usize))
     }
 }
