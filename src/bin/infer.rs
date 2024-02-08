@@ -1,5 +1,5 @@
 use candle_core::{bail, DType, Device, Result, Tensor};
-use candle_nn::{VarBuilder, VarMap};
+use candle_nn::VarBuilder;
 use clap::Parser;
 use std::path::Path;
 use test_candle_rs::{CNNModel, LinearModel, MNISTModel};
@@ -67,17 +67,16 @@ fn infer_imgs(
 fn main() -> Result<()> {
     let device = Device::cuda_if_available(0)?;
     let args = Args::parse();
-    let mut vm = VarMap::new();
-    let vb = VarBuilder::from_varmap(&vm, DType::F32, &device);
+    let model_path = args.model_path.unwrap_or(format!(
+        "./model/{}_model.safetensors",
+        if args.linear { "linear" } else { "cnn" }
+    ));
+    let weights = std::fs::read(&model_path)?;
+    let vb = VarBuilder::from_buffered_safetensors(weights, DType::F32, &device)?;
     let model: Box<dyn MNISTModel> = if args.linear {
         Box::new(LinearModel::new(vb)?)
     } else {
         Box::new(CNNModel::new(vb)?)
     };
-    let model_path = args.model_path.unwrap_or(format!(
-        "./model/{}_model.safetensors",
-        if args.linear { "linear" } else { "cnn" }
-    ));
-    vm.load(&model_path)?;
     infer_imgs(model.as_ref(), &args.image_path, args.verbose, &device)
 }

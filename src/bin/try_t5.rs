@@ -8,7 +8,7 @@ use std::io::Write;
 use tokenizers::Tokenizer;
 fn load_from_hf(device: &Device) -> Result<(T5ForConditionalGeneration, Tokenizer)> {
     let api = Api::new()?;
-    let model_name = "google/flan-t5-small".to_string();
+    let model_name = "t5-small".to_string();
     let api = api.model(model_name);
 
     let config = std::fs::read_to_string(api.get("config.json")?)?;
