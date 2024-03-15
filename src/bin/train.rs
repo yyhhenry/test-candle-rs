@@ -122,7 +122,7 @@ fn main() -> Result<()> {
             let output = model.forward_t(&d.images, true)?;
             let loss = cross_entropy(&output, &d.labels)?;
             opt.backward_step(&loss)?;
-            let loss = loss.detach()?.affine(d.size as f64, 0.0)?;
+            let loss = loss.detach().affine(d.size as f64, 0.0)?;
             loss_sum = loss_sum.add(&loss)?;
         }
         let loss_sum = loss_sum.to_scalar::<f32>()?;
@@ -144,7 +144,7 @@ fn main() -> Result<()> {
             let d = entry?;
             let output = model.predict_argmax(&d.images)?;
             let correct = output.eq(&d.labels)?.to_dtype(DType::U32)?.sum(0)?;
-            correct_sum = correct_sum.add(&correct.detach()?)?;
+            correct_sum = correct_sum.add(&correct.detach())?;
         }
         let correct_sum = correct_sum.to_scalar::<u32>()?;
         let accuracy = correct_sum as f32 / test_set.size as f32;

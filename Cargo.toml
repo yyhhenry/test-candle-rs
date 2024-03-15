@@ -8,13 +8,9 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1.0.79"
-candle-core = {version = "0.3.2", features = ["cudnn"]}
-candle-datasets = "0.3.2"
-candle-nn = {version = "0.3.2", features = ["cuda"]}
-candle-transformers = {version = "0.3.2", features = ["cuda"]}
+candle-core = {version = "0.4.1", features = ["cudnn"]}
+candle-datasets = "0.4.1"
+candle-nn = {version = "0.4.1", features = ["cuda"]}
 clap = {version = "4.4.14", features = ["derive"]}
-hf-hub = "0.3.2"
 image = "0.24.8"
 indicatif = "0.17.7"
-serde_json = "1.0.111"
-tokenizers = "0.15.1"
