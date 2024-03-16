@@ -12,3 +12,4 @@
 
 此外，推理速度在cudnn加持下效果仍然不够明显，虽然的确有所加速，但是未达到`PyTorch`的水平。
 
+更多有关运行效率的信息，见[torch-mnist-bench](https://github.com/yyhhenry/torch-mnist-bench)
