@@ -5,7 +5,7 @@ use std::path::Path;
 use test_candle_rs::{CNNModel, LinearModel, MNISTModel};
 #[derive(Parser)]
 struct Args {
-    #[arg(default_value = "data/imgs")]
+    #[arg(default_value = "data/test_set")]
     image_path: String,
     #[arg(short = 'V', long)]
     verbose: bool,
