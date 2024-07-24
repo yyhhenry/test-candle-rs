@@ -8,7 +8,7 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1.0.79"
-candle-core = { version = "0.6.0", features = ["cuda"] }
+candle-core = { version = "0.6.0", features = ["cudnn"] }
 candle-datasets = "0.6.0"
 candle-nn = { version = "0.6.0", features = ["cuda"] }
 clap = { version = "4.4.14", features = ["derive"] }

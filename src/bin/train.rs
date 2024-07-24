@@ -11,6 +11,8 @@ struct Args {
     #[arg(long)]
     batch_size: Option<usize>,
     #[arg(long)]
+    eval_batch_size: Option<usize>,
+    #[arg(long)]
     epochs: Option<usize>,
     #[arg(long)]
     lr: Option<f64>,
@@ -80,14 +82,15 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let batch_size = args
         .batch_size
-        .unwrap_or(if args.linear { 3000 } else { 200 });
+        .unwrap_or(if args.linear { 800 } else { 50 });
+    let eval_batch_size = args.eval_batch_size.unwrap_or(1000);
     let model_name = if args.linear { "linear" } else { "cnn" };
     let model_path = args
         .model_path
         .unwrap_or(format!("./model/{}.safetensors", model_name));
     let model_tmp_path = format!("./model/{}.tmp.safetensors", model_name);
-    let lr = args.lr.unwrap_or(if args.linear { 1e0 } else { 1e-2 });
-    let epochs = args.epochs.unwrap_or(if args.linear { 120 } else { 40 });
+    let lr = args.lr.unwrap_or(if args.linear { 5e-1 } else { 3e-2 });
+    let epochs = args.epochs.unwrap_or(if args.linear { 80 } else { 10 });
     let device = Device::new_cuda(0)?;
     device.set_seed(43)?;
 
@@ -137,7 +140,7 @@ fn main() -> Result<()> {
         println!("Epoch {} evaluating", epoch);
         let mut correct_sum = Tensor::new(0_u32, &device)?;
         for entry in test_set
-            .batch(batch_size)
+            .batch(eval_batch_size)
             .try_progress()
             .expect("Failed to show progress bar")
         {
