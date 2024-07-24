@@ -1,4 +1,3 @@
-/target
-/model/*
-!/model/.gitkeep
+target/
+model/
 .vscode/

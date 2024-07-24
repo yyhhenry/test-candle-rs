@@ -1,8 +1,9 @@
 use candle_core::{DType, Device, IndexOp, Result, Tensor};
 use candle_datasets::vision::mnist;
-use candle_nn::{loss::cross_entropy, optim::AdamW, Optimizer, ParamsAdamW, VarBuilder, VarMap};
+use candle_nn::{loss::cross_entropy, optim::SGD, Optimizer, VarBuilder, VarMap};
 use clap::Parser;
 use indicatif::ProgressIterator;
+use std::{fs::create_dir_all, path::Path};
 use test_candle_rs::{CNNModel, LinearModel, MNISTModel};
 
 #[derive(Parser)]
@@ -73,19 +74,22 @@ fn load_dataset(device: &Device) -> Result<(MNISTDatasetSplit, MNISTDatasetSplit
 fn main() -> Result<()> {
     let main_start_time = std::time::Instant::now();
 
+    create_dir_all(Path::new("./model"))?;
+
     // Initialize
     let args = Args::parse();
     let batch_size = args
         .batch_size
         .unwrap_or(if args.linear { 3000 } else { 200 });
-    let model_path = args.model_path.unwrap_or(format!(
-        "./model/{}_model.safetensors",
-        if args.linear { "linear" } else { "cnn" }
-    ));
-    let lr = args.lr.unwrap_or(if args.linear { 1e-2 } else { 2e-4 });
-    let epochs = args.epochs.unwrap_or(if args.linear { 50 } else { 20 });
-    let device = Device::cuda_if_available(0)?;
-    device.set_seed(42)?;
+    let model_name = if args.linear { "linear" } else { "cnn" };
+    let model_path = args
+        .model_path
+        .unwrap_or(format!("./model/{}.safetensors", model_name));
+    let model_tmp_path = format!("./model/{}.tmp.safetensors", model_name);
+    let lr = args.lr.unwrap_or(if args.linear { 1e0 } else { 1e-2 });
+    let epochs = args.epochs.unwrap_or(if args.linear { 120 } else { 40 });
+    let device = Device::new_cuda(0)?;
+    device.set_seed(43)?;
 
     // Load dataset
     let (train_set, test_set) = load_dataset(&device)?;
@@ -93,21 +97,17 @@ fn main() -> Result<()> {
     println!("Dataset loaded.");
 
     // Build model
-    let vm = VarMap::new();
+    let mut vm = VarMap::new();
     let vb = VarBuilder::from_varmap(&vm, DType::F32, &device);
     let model: Box<dyn MNISTModel> = if args.linear {
         Box::new(LinearModel::new(vb)?)
     } else {
         Box::new(CNNModel::new(vb)?)
     };
-    let mut opt = AdamW::new(
-        vm.all_vars(),
-        ParamsAdamW {
-            lr,
-            ..Default::default()
-        },
-    )?;
+    let mut opt = SGD::new(vm.all_vars(), lr)?;
     println!("Model built.");
+
+    let mut highest_accuracy = 0.0;
 
     for epoch in 1..=epochs {
         let start_time = std::time::Instant::now();
@@ -155,9 +155,19 @@ fn main() -> Result<()> {
             accuracy * 100.0,
             start_time.elapsed().as_secs_f32()
         );
+
+        if accuracy > highest_accuracy {
+            highest_accuracy = accuracy;
+            vm.save(&model_tmp_path)?;
+            println!("Model saved at epoch {}.", epoch);
+        } else {
+            println!("Model not saved, accuracy not improved.");
+        }
     }
-    vm.save(model_path)?;
-    println!("Model saved.");
+    vm.load(&model_tmp_path)?;
+    vm.save(&model_path)?;
+    println!("Model saved at {}.", model_path);
+    println!("Highest accuracy: {:.3}%", highest_accuracy * 100.0);
     println!(
         "Total time: {:.3}s",
         main_start_time.elapsed().as_secs_f32()

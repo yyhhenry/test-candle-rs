@@ -67,10 +67,10 @@ fn infer_imgs(
 fn main() -> Result<()> {
     let device = Device::cuda_if_available(0)?;
     let args = Args::parse();
-    let model_path = args.model_path.unwrap_or(format!(
-        "./model/{}_model.safetensors",
-        if args.linear { "linear" } else { "cnn" }
-    ));
+    let model_name = if args.linear { "linear" } else { "cnn" };
+    let model_path = args
+        .model_path
+        .unwrap_or(format!("./model/{}.safetensors", model_name));
     let weights = std::fs::read(&model_path)?;
     let vb = VarBuilder::from_buffered_safetensors(weights, DType::F32, &device)?;
     let model: Box<dyn MNISTModel> = if args.linear {

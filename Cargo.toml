@@ -8,9 +8,10 @@ version = "0.1.0"
 
 [dependencies]
 anyhow = "1.0.79"
-candle-core = { version = "0.4.1", features = ["cudnn"] }
-candle-datasets = "0.4.1"
-candle-nn = { version = "0.4.1", features = ["cuda"] }
+candle-core = { version = "0.6.0", features = ["cuda"] }
+candle-datasets = "0.6.0"
+candle-nn = { version = "0.6.0", features = ["cuda"] }
 clap = { version = "4.4.14", features = ["derive"] }
 image = "0.24.8"
 indicatif = "0.17.7"
+rand = "0.8.5"
