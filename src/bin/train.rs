@@ -3,7 +3,7 @@ use candle_datasets::vision::mnist;
 use candle_nn::{loss::cross_entropy, optim::SGD, Optimizer, VarBuilder, VarMap};
 use clap::Parser;
 use indicatif::ProgressIterator;
-use std::{fs::create_dir_all, path::Path};
+use std::{fs::create_dir_all, path::PathBuf};
 use test_candle_rs::{CNNModel, LinearModel, MNISTModel};
 
 #[derive(Parser)]
@@ -76,7 +76,11 @@ fn load_dataset(device: &Device) -> Result<(MNISTDatasetSplit, MNISTDatasetSplit
 fn main() -> Result<()> {
     let main_start_time = std::time::Instant::now();
 
-    create_dir_all(Path::new("./model"))?;
+    let model_dir = PathBuf::from("./model");
+
+    let checkpoint_dir = model_dir.join("checkpoint");
+
+    create_dir_all(&checkpoint_dir)?;
 
     // Initialize
     let args = Args::parse();
@@ -84,11 +88,15 @@ fn main() -> Result<()> {
         .batch_size
         .unwrap_or(if args.linear { 800 } else { 50 });
     let eval_batch_size = args.eval_batch_size.unwrap_or(1000);
+
     let model_name = if args.linear { "linear" } else { "cnn" };
-    let model_path = args
-        .model_path
-        .unwrap_or(format!("./model/{}.safetensors", model_name));
-    let model_tmp_path = format!("./model/{}.tmp.safetensors", model_name);
+    let file_name = format!("{}.safetensors", model_name);
+
+    let model_path = model_dir.join(&file_name);
+    let model_path = args.model_path.map_or(model_path, PathBuf::from);
+
+    let model_tmp_path = checkpoint_dir.join(&file_name);
+
     let lr = args.lr.unwrap_or(if args.linear { 5e-1 } else { 3e-2 });
     let epochs = args.epochs.unwrap_or(if args.linear { 80 } else { 10 });
     let device = Device::new_cuda(0)?;
@@ -169,7 +177,7 @@ fn main() -> Result<()> {
     }
     vm.load(&model_tmp_path)?;
     vm.save(&model_path)?;
-    println!("Model saved at {}.", model_path);
+    println!("Model saved at {}.", model_path.display());
     println!("Highest accuracy: {:.3}%", highest_accuracy * 100.0);
     println!(
         "Total time: {:.3}s",

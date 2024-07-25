@@ -1,4 +1,5 @@
 target/
 model/
+tmp/
 .vscode/
-/infer.exe
+dist/
