@@ -3,13 +3,7 @@ use candle_core::{Device, Tensor};
 
 fn main() -> Result<()> {
     let n = 1_000_000;
-    let device = Device::Cpu;
-    // Or
-    // let device = Device::new_cuda(0)?;
-
-    // But actually, it's slower than CPU for this small example.
-    // It costs ~1.9s with CPU and ~17s with CUDA when n = 1_000_000.
-    // It's even faster compared to `tch-rs` when both are using CPU. (`tch-rs` costs ~3s)
+    let device = Device::cuda_if_available(0)?;
 
     let shape = (n, 3, 3);
 
@@ -31,8 +25,17 @@ fn main() -> Result<()> {
 
     let elapsed = start_time.elapsed();
 
+    println!("Results: {:?}", results);
     println!("Elapsed: {:?}", elapsed);
 
-    println!("Results: {:?}", results);
+    println!("Directly matmul");
+
+    let start_time = std::time::Instant::now();
+    let direct_result = tensor1.matmul(&tensor2)?;
+    let elapsed = start_time.elapsed();
+
+    println!("Direct result: {:?}", direct_result);
+    println!("Elapsed: {:?}", elapsed);
+
     Ok(())
 }
